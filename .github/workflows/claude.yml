@@ -9,32 +9,54 @@ on:
     types: [opened, assigned]
   pull_request_review:
     types: [submitted]
+  pull_request:
+    types: [opened, synchronize]
 
 jobs:
   claude-code-action:
+    # Only run if @claude is mentioned
     if: |
       (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
       (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
       (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
       (github.event_name == 'issues' && contains(github.event.issue.body, '@claude'))
+    
     runs-on: ubuntu-latest
+    
     permissions:
-      contents: read
-      pull-requests: read
-      issues: read
+      contents: write
+      pull-requests: write
+      issues: write
       id-token: write
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          fetch-depth: 0
 
-      - name: Run Claude PR Action
+      - name: Run Claude Code Action (OAuth)
         uses: grll/claude-code-action@beta
         with:
           use_oauth: true
           claude_access_token: ${{ secrets.CLAUDE_ACCESS_TOKEN }}
           claude_refresh_token: ${{ secrets.CLAUDE_REFRESH_TOKEN }}
           claude_expires_at: ${{ secrets.CLAUDE_EXPIRES_AT }}
-          
-          timeout_minutes: "60"
+          timeout_minutes: 60
+          trigger_phrase: "@claude"
+          allowed_tools: "Bash(poetry install),Bash(poetry run),Bash(make),Bash(python),Bash(pytest)"
+          custom_instructions: |
+            This is a Python SDK for Hyperliquid API trading. Key details:
+            - Uses Poetry for dependency management (Python 3.10 required for development)
+            - Run 'make install' to install dependencies
+            - Run 'make test' for testing, 'make lint' for linting
+            - Examples are in the examples/ directory
+            - Configuration goes in examples/config.json
+            - Follow existing code patterns and maintain backwards compatibility
+            
+            When making changes:
+            - Follow existing code style and patterns
+            - Update tests if needed
+            - Ensure backwards compatibility
+            - Add type hints where appropriate
+            - Test with the examples to ensure they still work
