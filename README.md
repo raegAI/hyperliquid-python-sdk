@@ -43,6 +43,10 @@ vim examples/config.json
 python examples/basic_order.py
 ```
 
+## Claude Code Automation
+
+For information about using Claude Code automation with this repository, see our [Automation Guide](docs/AUTOMATION_GUIDE.md).
+
 ## Getting started with contributing to this repo
 
 1. Download `Poetry`: https://python-poetry.org/. 
